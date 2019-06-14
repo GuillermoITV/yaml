@@ -7,10 +7,12 @@ Parameters:
   KeyName:
     Description: The EC2 Key Pair to allow SSH access to the instances
     Type: AWS::EC2::KeyPair::KeyName
+    Default: helm
 
   NodeImageId:
     Description: AMI id for the node instances.
     Type: AWS::EC2::Image::Id
+    Default: ami-0abcb9f9190e867ab
 
   NodeInstanceType:
     Description: EC2 instance type for the node instances
@@ -123,7 +125,7 @@ Parameters:
   ClusterName:
     Description: The cluster name provided when the cluster was created. If it is incorrect, nodes will not be able to join the cluster.
     Type: String
-    Default: eks-cluster
+    Default: eks-prod-cluster
 
   BootstrapArguments:
     Description: Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami
@@ -145,6 +147,7 @@ Parameters:
   Subnets:
     Description: The subnets where workers can be created.
     Type: List<AWS::EC2::Subnet::Id>
+    Default subnet-0731c3399a66763fe
 
 Metadata:
 
@@ -283,7 +286,7 @@ Resources:
       VPCZoneIdentifier: !Ref Subnets
       Tags:
         - Key: Name
-          Value: !Sub ${ClusterName}-${NodeGroupName}-Node
+          Value: !Sub ${ClusterName}-${nodes}-Node
           PropagateAtLaunch: true
         - Key: !Sub kubernetes.io/cluster/${ClusterName}
           Value: owned
@@ -317,7 +320,7 @@ Resources:
             set -o xtrace
             /etc/eks/bootstrap.sh ${ClusterName} ${BootstrapArguments}
             /opt/aws/bin/cfn-signal --exit-code $? \
-                     --stack  ${AWS::StackName} \
+                     --stack  ${AWS::nodes} \
                      --resource NodeGroup  \
                      --region ${AWS::Region}
 
